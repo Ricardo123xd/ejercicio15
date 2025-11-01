@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de monedas</title>
+</head>
+
+<body>
+
+    <h1>Convertir a pesos mexicanos</h1>
+
+    <label>Cantidad en pesos mexicanos:</label>
+    <input type="number" id="pesos"><br><br>
+
+    <label><input type="radio" name="moneda" value="USD">Dólar (USD)</label><br>
+    <label><input type="radio" name="moneda" value="EURO">Euro (EUR)</label><br>
+    <label><input type="radio" name="moneda" value="JPY">Yen (JPY)</label><br><br>
+
+    <button onclick="convertir()">Convertir la moneda</button>
+
+    <h2>Resultado de la conversión</h2>
+    <p id="resultado"></p>
+
+    <script>
+        let datos = [];
+
+        async function getFile() {
+            let myPromise = new Promise(function (resolve) {
+                let req = new XMLHttpRequest();
+                req.open("GET", "http://18.222.133.113/ejercicio16/index.php");
+
+                req.onload = function () {
+                    if (req.status == 200) {
+                        datos = JSON.parse(req.responseText);
+                        resolve("Datos cargados correctamente.");
+                    } else {
+                        resolve("No se pudo obtener el archivo.");
+                    }
+                };
+
+                req.onerror = function () {
+                    resolve("Error de conexión con el servidor.");
+                };
+
+                req.send();
+            });
+
+            // Espera a que se carguen los datos antes de permitir conversiones
+            await myPromise;
+        }
+
+        function convertir() {
+            let pesos = parseFloat(document.getElementById("pesos").value);
+            let seleccion = document.querySelector('input[name="moneda"]:checked');
+            let resultado = document.getElementById("resultado");
+
+            if (isNaN(pesos) || pesos <= 0) {
+                resultado.innerHTML = "Ingresa una cantidad válida.";
+                return;
+            }
+
+            if (!seleccion) {
+                resultado.innerHTML = "Selecciona una moneda.";
+                return;
+            }
+
+            if (datos.length === 0) {
+                resultado.innerHTML = "Los datos aún no se han cargado.";
+                return;
+            }
+
+            let moneda = datos.find(m => m.moneda === seleccion.value);
+
+            if (!moneda) {
+                resultado.innerHTML = "No se encontró el tipo de cambio.";
+                return;
+            }
+
+            let total = (pesos / moneda.valor).toFixed(2);
+            resultado.innerHTML = `${pesos} pesos mexicanos = ${total} ${moneda.moneda}`;
+        }
+
+        getFile();
+    </script>
+
+</body>
+
+</html>
